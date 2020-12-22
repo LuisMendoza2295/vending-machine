@@ -7,6 +7,7 @@ import com.proximity.vending.domain.model.Product;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,5 +38,11 @@ public class ProductRestController {
     public ProductDTO createProduct(@RequestBody ProductDTO request) {
         Product savedProduct = this.productService.createProduct(request);
         return this.productDTOMapper.map(savedProduct);
+    }
+
+    @PatchMapping("/{code}/price")
+    public ProductDTO changePrice(@PathVariable("code") String code, @RequestParam("price") BigDecimal price) {
+        Product updatedProduct = this.productService.changePrice(code, price);
+        return this.productDTOMapper.map(updatedProduct);
     }
 }

@@ -14,6 +14,5 @@ public interface ProductService {
 
     Product createProduct(ProductDTO productDTO);
 
-    // TODO
     Product changePrice(String productID, BigDecimal price);
 }

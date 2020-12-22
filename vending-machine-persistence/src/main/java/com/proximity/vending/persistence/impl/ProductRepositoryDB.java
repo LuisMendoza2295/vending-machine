@@ -62,6 +62,7 @@ public class ProductRepositoryDB implements ProductRepository {
 
         ProductEntity productEntity = this.productDBMapper.map(product);
         productEntity.setId(currentProductEntity.getId());
+        productEntity.setVendingMachineProductEntities(currentProductEntity.getVendingMachineProductEntities());
 
         ProductEntity updatedProductEntity = this.productJpaRepository.save(productEntity);
         return this.productDBMapper.map(updatedProductEntity);

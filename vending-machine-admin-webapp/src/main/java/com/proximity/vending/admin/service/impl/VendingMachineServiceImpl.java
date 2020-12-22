@@ -48,6 +48,7 @@ public class VendingMachineServiceImpl implements VendingMachineService {
                 .status(VendingMachineStatus.OK.getCode())
                 .type(vendingMachineDTO.getType())
                 .lastMoneyPickUp(LocalDateTime.now())
+                .lastPing(LocalDateTime.now())
                 .build();
         log.info("MACHINE TO BE CREATED {}", vendingMachine);
 
