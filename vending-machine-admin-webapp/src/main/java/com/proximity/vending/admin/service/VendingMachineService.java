@@ -11,7 +11,7 @@ public interface VendingMachineService {
 
     VendingMachine createVendingMachine(VendingMachineDTO vendingMachineDTO);
 
-    VendingMachine addProduct(String vendingMachineID, ProductCountDTO productCountDTO);
+    VendingMachine putProducts(String vendingMachineID, ProductCountDTO productCountDTO);
 
     VendingMachine removeProduct(String vendingMachineID, String productID);
 

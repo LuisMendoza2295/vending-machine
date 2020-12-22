@@ -56,7 +56,7 @@ public class VendingMachineServiceImpl implements VendingMachineService {
     }
 
     @Override
-    public VendingMachine addProduct(String vendingMachineID, ProductCountDTO productCountDTO) {
+    public VendingMachine putProducts(String vendingMachineID, ProductCountDTO productCountDTO) {
         VendingMachine vendingMachine = this.vendingMachineRepository.findByVendingMachineID(VendingMachineID.of(vendingMachineID));
         log.info("CURRENT MACHINE {}", vendingMachine);
 
@@ -65,7 +65,7 @@ public class VendingMachineServiceImpl implements VendingMachineService {
                 .stream()
                 .collect(Collectors.toMap(e -> ProductID.of(e.getKey()), Map.Entry::getValue))
                 .forEach(vendingMachine::putProduct);
-        log.info("MACHINE TO BE UPDATED WITH ADDED PRODUCTS {}", vendingMachine);
+        log.info("MACHINE TO BE UPDATED WITH NEW PRODUCTS {}", vendingMachine);
 
         VendingMachine updatedVendingMachine = this.vendingMachineRepository.updateVendingMachine(vendingMachine);
         log.info("UPDATED MACHINE {}", updatedVendingMachine);

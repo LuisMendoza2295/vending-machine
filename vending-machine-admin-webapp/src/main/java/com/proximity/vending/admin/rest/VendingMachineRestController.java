@@ -34,9 +34,9 @@ public class VendingMachineRestController {
         return this.vendingMachineDTOMapper.map(createdVendingMachine);
     }
 
-    @PatchMapping("/{code}/add-product")
-    public VendingMachineDTO addProduct(@PathVariable("code") String code, @RequestBody ProductCountDTO countDTO) {
-        VendingMachine vendingMachine = this.vendingMachineService.addProduct(code, countDTO);
+    @PatchMapping("/{code}/put-products")
+    public VendingMachineDTO putProducts(@PathVariable("code") String code, @RequestBody ProductCountDTO countDTO) {
+        VendingMachine vendingMachine = this.vendingMachineService.putProducts(code, countDTO);
 
         return this.vendingMachineDTOMapper.map(vendingMachine);
     }

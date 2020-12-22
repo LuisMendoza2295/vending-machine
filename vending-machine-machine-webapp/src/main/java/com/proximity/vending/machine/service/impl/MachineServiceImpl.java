@@ -8,7 +8,6 @@ import com.proximity.vending.domain.type.Denomination;
 import com.proximity.vending.domain.type.TransactionType;
 import com.proximity.vending.domain.type.VendingMachineStatus;
 import com.proximity.vending.domain.vo.ProductID;
-import com.proximity.vending.domain.vo.VendingMachineID;
 import com.proximity.vending.machine.config.VendingMachineProperties;
 import com.proximity.vending.machine.dto.CardDTO;
 import com.proximity.vending.machine.dto.CashDTO;
@@ -34,6 +33,7 @@ import reactor.core.publisher.Mono;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -95,25 +95,6 @@ public class MachineServiceImpl implements MachineService {
     public Mono<ChangeDTO> cashTransaction(CashDTO cashDTO) {
         Mono<VendingMachine> vendingMachineMono = this.getFindVendingMachineMono();
 
-        CashPaymentDTO cashPaymentDTO = CashPaymentDTO.builder()
-                .productID(cashDTO.getProduct())
-                .vendingMachineID(this.machineProperties.getId())
-                .insertedDenomination(cashDTO.getCash())
-                .build();
-
-        Mono<Transaction> transactionMono = this.adminWebClient
-                .post()
-                .uri(CASH_TRANSACTION_PATH)
-                .body(BodyInserters.fromValue(cashPaymentDTO))
-                .retrieve()
-                .onStatus(
-                        httpStatus -> !httpStatus.is2xxSuccessful(),
-                        clientResponse -> clientResponse.body(BodyExtractors.toMono(BaseException.class)).flatMap(Mono::error)
-                )
-                .bodyToMono(TransactionDTO.class)
-                .map(this.transactionMachineMapper::map)
-                .switchIfEmpty(Mono.error(new NotFoundEntityException(Transaction.class)));
-
         Map<Denomination, Integer> change = new HashMap<>();
 
         return vendingMachineMono.
@@ -134,7 +115,36 @@ public class MachineServiceImpl implements MachineService {
                     change.putAll(vendingMachine.calculateChange(changeAmount));
                 })
                 .doOnError(e -> log.error("COULD NOT PROCESS VENDING MACHINE PRECONDITIONS"))
-                .flatMap(vendingMachine -> transactionMono)
+                .flatMap(vendingMachine -> {
+                    cashDTO.getCash()
+                            .entrySet()
+                            .stream()
+                            .collect(Collectors.toMap(e -> Denomination.fromCode(e.getKey()), Map.Entry::getValue))
+                            .forEach(vendingMachine::addCurrencyCount);
+                    change.forEach(vendingMachine::subtractCurrencyCount);
+                    return Mono.just(vendingMachine);
+                })
+                .flatMap(vendingMachine -> Mono.just(CashPaymentDTO.builder()
+                        .productID(cashDTO.getProduct())
+                        .vendingMachineID(this.machineProperties.getId())
+                        .insertedDenominationCount(cashDTO.getCash())
+                        .finalDenominationCount(vendingMachine.getDenominationCount()
+                                .entrySet()
+                                .stream()
+                                .collect(Collectors.toMap(e -> e.getKey().getCode(), Map.Entry::getValue)))
+                        .build()))
+                .flatMap(cashPaymentDTO -> this.adminWebClient
+                        .post()
+                        .uri(CASH_TRANSACTION_PATH)
+                        .body(BodyInserters.fromValue(cashPaymentDTO))
+                        .retrieve()
+                        .onStatus(
+                                httpStatus -> !httpStatus.is2xxSuccessful(),
+                                clientResponse -> clientResponse.body(BodyExtractors.toMono(BaseException.class)).flatMap(Mono::error)
+                        )
+                        .bodyToMono(TransactionDTO.class)
+                        .map(this.transactionMachineMapper::map)
+                        .switchIfEmpty(Mono.error(new NotFoundEntityException(Transaction.class))))
                 .doOnError(e -> log.error("COULD NOT PROCESS CASH TRANSACTION"))
                 .flatMap(transaction -> Mono.just(this.changeDTOMapper.map(transaction, change)));
     }

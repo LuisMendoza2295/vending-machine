@@ -13,8 +13,10 @@ import com.proximity.vending.persistence.repository.ProductJpaRepository;
 import com.proximity.vending.persistence.repository.TransactionJpaRepository;
 import com.proximity.vending.persistence.repository.VendingMachineJpaRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -43,6 +45,18 @@ public class TransactionRepositoryDB implements TransactionRepository {
         return transactionEntities.stream()
                 .map(this.transactionDBMapper::map)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Transaction> findAll(LocalDateTime from, LocalDateTime to, int pageNumber, int pageSize) {
+        return this.transactionJpaRepository.findAllBetweenDates(from, to, PageRequest.of(pageNumber, pageSize)).stream()
+                .map(this.transactionDBMapper::map)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public BigDecimal getTotalEarnings(LocalDateTime from, LocalDateTime to) {
+        return this.transactionJpaRepository.getTransactionAmountSum(from, to);
     }
 
     @Override

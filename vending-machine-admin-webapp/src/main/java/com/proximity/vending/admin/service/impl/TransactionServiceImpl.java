@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -41,7 +42,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional
-    public Transaction createCashTransaction(String productID, String vendingMachineID, DenominationCountDTO denominationCountDTO) {
+    public Transaction createCashTransaction(String productID, String vendingMachineID, DenominationCountDTO finalDenominationCountDTO, DenominationCountDTO paidDenominationCountDTO) {
         VendingMachine vendingMachine = this.vendingMachineRepository.findByVendingMachineID(VendingMachineID.of(vendingMachineID));
         log.info("CREATING CASH TRANSACTION FOR MACHINE {} ", vendingMachine);
 
@@ -58,14 +59,16 @@ public class TransactionServiceImpl implements TransactionService {
                 .amount(productPrice)
                 .dateTime(LocalDateTime.now())
                 .build();
-        denominationCountDTO.getDenominationCount()
+        finalDenominationCountDTO.getDenominationCount()
                 .entrySet()
                 .stream()
                 .collect(Collectors.toMap(e -> Denomination.fromCode(e.getKey()), Map.Entry::getValue))
-                .forEach((denomination, count) -> {
-                    transaction.addDenomination(denomination, count);
-                    vendingMachine.addCurrencyCount(denomination, count);
-                });
+                .forEach(vendingMachine::putCurrencyCount);
+        paidDenominationCountDTO.getDenominationCount()
+                .entrySet()
+                .stream()
+                .collect(Collectors.toMap(e -> Denomination.fromCode(e.getKey()), Map.Entry::getValue))
+                .forEach(transaction::addDenomination);
         log.info("CASH TRANSACTION TO BE CREATED {}", transaction);
 
         Transaction createdTransaction = this.transactionRepository.createTransaction(transaction);
@@ -117,5 +120,23 @@ public class TransactionServiceImpl implements TransactionService {
         log.info("UPDATED VENDING MACHINE {}", updatedVendingMachine);
 
         return createdTransaction;
+    }
+
+    @Override
+    public List<Transaction> findAllBetweenDates(LocalDateTime from, LocalDateTime to, int pageNumber, int pageSize) {
+        log.info("SEARCHING TRANSACTIONS BETWEEN {} AND {} (PAGE {}, SIZE {})", from, to, pageNumber, pageSize);
+        List<Transaction> transactions = this.transactionRepository.findAll(from, to, pageNumber, pageSize);
+        log.info("TRANSACTIONS: {}", transactions);
+
+        return transactions;
+    }
+
+    @Override
+    public BigDecimal getTotalEarnings(LocalDateTime from, LocalDateTime to) {
+        log.info("CALCULATING TOTAL EARNINGS BETWEEN {} AND {}", from, to);
+        BigDecimal totalEarnings = this.transactionRepository.getTotalEarnings(from, to);
+        log.info("TOTAL EARNINGS: {}", totalEarnings);
+
+        return totalEarnings;
     }
 }

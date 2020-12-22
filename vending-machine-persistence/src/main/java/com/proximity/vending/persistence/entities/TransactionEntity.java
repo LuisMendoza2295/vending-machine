@@ -5,6 +5,7 @@ import lombok.*;
 import javax.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Set;
 
 @Getter
@@ -36,8 +37,8 @@ public class TransactionEntity {
     @Column(name = "time")
     private LocalDateTime time;
 
-    @OneToMany(mappedBy = "transactionEntity")
-    private Set<TransactionDetailEntity> transactionDetailEntities;
+    @OneToMany(mappedBy = "transactionEntity", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private Set<TransactionDetailEntity> transactionDetailEntities = new HashSet<>();
 
     @ManyToOne
     @JoinColumn(name = "product_id")

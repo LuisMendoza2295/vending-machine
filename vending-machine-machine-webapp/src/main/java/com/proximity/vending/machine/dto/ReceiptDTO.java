@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
 public class ReceiptDTO {
 
+    private String uuid;
     private String issuer;
     private BigDecimal amount;
     private LocalDateTime dateTime;

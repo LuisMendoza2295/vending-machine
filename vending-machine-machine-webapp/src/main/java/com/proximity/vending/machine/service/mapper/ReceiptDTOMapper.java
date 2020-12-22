@@ -9,6 +9,7 @@ public class ReceiptDTOMapper {
 
     public ReceiptDTO map(Transaction transaction) {
         return ReceiptDTO.builder()
+                .uuid(transaction.getTransactionID().getValue())
                 .issuer(transaction.getIssuer().getValue())
                 .amount(transaction.getAmount().getValue())
                 .dateTime(transaction.getDateTime())

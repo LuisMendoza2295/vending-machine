@@ -13,5 +13,6 @@ public class CashPaymentDTO {
 
     private String productID;
     private String vendingMachineID;
-    private Map<String, Integer> insertedDenomination;
+    private Map<String, Integer> finalDenominationCount;
+    private Map<String, Integer> insertedDenominationCount;
 }

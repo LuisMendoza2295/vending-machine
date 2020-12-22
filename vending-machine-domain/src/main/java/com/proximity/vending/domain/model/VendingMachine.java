@@ -1,9 +1,6 @@
 package com.proximity.vending.domain.model;
 
-import com.proximity.vending.domain.exception.CashChangeException;
-import com.proximity.vending.domain.exception.InvalidDataException;
-import com.proximity.vending.domain.exception.OutOfStockException;
-import com.proximity.vending.domain.exception.Preconditions;
+import com.proximity.vending.domain.exception.*;
 import com.proximity.vending.domain.type.*;
 import com.proximity.vending.domain.vo.MoneyAmount;
 import com.proximity.vending.domain.vo.ProductID;
@@ -138,14 +135,21 @@ public class VendingMachine {
         return this;
     }
 
+    public VendingMachine subtractCurrencyCount(Denomination denomination, int count) {
+        int actualCount = this.denominationCount.get(denomination);
+        Preconditions.checkArgument(count > actualCount, () -> new InvalidDataException(Denomination.class));
+        this.denominationCount.put(denomination, actualCount - count);
+        return this;
+    }
+
     public VendingMachine putMoneyAmountsAsPrices(ProductID productID, BigDecimal price) {
+        Preconditions.checkNotArgument(this.products.containsKey(productID), () -> new NotFoundEntityException(ProductID.class));
         this.prices.put(productID, MoneyAmount.of(price));
         return this;
     }
 
     public VendingMachine putMoneyAmounts(ProductID productID, MoneyAmount moneyAmount) {
-        this.prices.put(productID, moneyAmount);
-        return this;
+        return this.putMoneyAmountsAsPrices(productID, moneyAmount.getValue());
     }
 
     public boolean supportsTransactionType(TransactionType transactionType) {
