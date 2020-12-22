@@ -1,0 +1,61 @@
+version: '3.2'
+services: 
+  vending-admin-db:
+    image: postgres:latest
+    container_name: vending-admin-db
+    environment:
+      - POSTGRES_PASSWORD=admin1234
+      - POSTGRES_DB=vending_db
+    ports:
+      - '5432:5432'
+    volumes:
+      - ./data:/var/lib/postgresql/data
+    networks:
+      - vending-db-nw
+
+  admin-service:
+    image: luismendoza2295/vending-admin
+    container_name: vending-admin-container
+    ports:
+      - '8080:8080'
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://vending-admin-db:5432/vending_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: admin1234
+    depends_on:
+      - vending-admin-db
+    networks:
+      - vending-db-nw
+      - vending-machine-nw
+
+  machine-service-001:
+    image: luismendoza2295/vending-machine
+    container_name: vending-machine-container-m001
+    ports:
+      - '8081:8080'
+    environment:
+      VENDING_MACHINE_ID: M001
+      VENDING_MACHINE_ADMIN-URL: http://vending-admin-container:8080/admin
+    depends_on:
+      - admin-service
+    networks:
+      - vending-machine-nw
+
+  machine-service-002:
+    image: luismendoza2295/vending-machine
+    container_name: vending-machine-container-m002
+    ports:
+      - '8082:8080'
+    environment:
+      VENDING_MACHINE_ID: M002
+      VENDING_MACHINE_ADMIN-URL: http://vending-admin-container:8080/admin
+    depends_on:
+      - admin-service
+    networks:
+      - vending-machine-nw
+
+networks: 
+  vending-db-nw:
+    driver: bridge
+  vending-machine-nw:
+    driver: bridge
