@@ -24,7 +24,7 @@ public class VendingMachinePingUpdater {
 
     @Scheduled(fixedRate = 60000)
     public void unlockVendingMachines() {
-        log.info("SENDING PING TO {}", this.machineProperties.getAdminUrl());
+        log.info("SENDING PING FROM {} TO {}", this.machineProperties.getId(), this.machineProperties.getAdminUrl());
         Mono<Boolean> pingMono = this.adminWebClient
                 .post()
                 .uri(SEND_PING_PATH, this.machineProperties.getId())
