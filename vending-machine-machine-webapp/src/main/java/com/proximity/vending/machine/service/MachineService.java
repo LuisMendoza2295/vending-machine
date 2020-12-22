@@ -11,4 +11,8 @@ public interface MachineService {
     Mono<ReceiptDTO> cardTransaction(CardDTO cardDTO);
 
     Mono<ChangeDTO> cashTransaction(CashDTO cashDTO);
+
+    Mono<Boolean> openMachine(String code);
+
+    Mono<Boolean> closeMachine();
 }

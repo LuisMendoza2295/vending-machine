@@ -1,10 +1,13 @@
 package com.proximity.vending.admin.service.impl;
 
+import com.proximity.vending.admin.config.VendingMachineProperties;
 import com.proximity.vending.admin.dto.DenominationCountDTO;
 import com.proximity.vending.admin.dto.ProductCountDTO;
 import com.proximity.vending.admin.dto.VendingMachineDTO;
 import com.proximity.vending.admin.service.VendingMachineService;
 import com.proximity.vending.domain.exception.BlockedMachineException;
+import com.proximity.vending.domain.exception.InvalidDataException;
+import com.proximity.vending.domain.exception.OpenMachineException;
 import com.proximity.vending.domain.exception.Preconditions;
 import com.proximity.vending.domain.model.VendingMachine;
 import com.proximity.vending.domain.repository.VendingMachineRepository;
@@ -27,17 +30,21 @@ import java.util.stream.Collectors;
 public class VendingMachineServiceImpl implements VendingMachineService {
 
     private final VendingMachineRepository vendingMachineRepository;
+    private final VendingMachineProperties vendingMachineProperties;
 
     @Override
     public VendingMachine findByVendingMachineID(String vendingMachineID) {
-        return this.vendingMachineRepository.findByVendingMachineID(VendingMachineID.of(vendingMachineID));
+        VendingMachine vendingMachine = this.vendingMachineRepository.findByVendingMachineID(VendingMachineID.of(vendingMachineID));
+        log.info("FOUND MACHINE {}", vendingMachine);
+
+        return vendingMachine;
     }
 
     @Override
     public VendingMachine createVendingMachine(VendingMachineDTO vendingMachineDTO) {
         VendingMachine vendingMachine = VendingMachine.builder()
                 .code(vendingMachineDTO.getCode())
-                .withDefaultAccessCode()
+                .accessCode(this.vendingMachineProperties.getDefaultAccessCode())
                 .status(VendingMachineStatus.OK.getCode())
                 .type(vendingMachineDTO.getType())
                 .lastMoneyPickUp(LocalDateTime.now())
@@ -120,13 +127,41 @@ public class VendingMachineServiceImpl implements VendingMachineService {
     @Override
     public boolean openVendingMachine(String vendingMachineID, String accessCode) {
         VendingMachine vendingMachine = this.vendingMachineRepository.findByVendingMachineID(VendingMachineID.of(vendingMachineID));
+        log.info("CURRENT MACHINE {}", vendingMachine);
         Preconditions.checkArgument(vendingMachine.getStatus().equals(VendingMachineStatus.BLOCKED), () -> new BlockedMachineException(vendingMachine.getVendingMachineID()));
+        Preconditions.checkArgument(vendingMachine.getStatus().equals(VendingMachineStatus.OPEN), () -> new OpenMachineException(vendingMachine.getVendingMachineID()));
 
+        log.info("TRYING TO OPEN MACHINE {}", vendingMachine.getVendingMachineID());
         return this.vendingMachineRepository.openVendingMachine(VendingMachineID.of(vendingMachineID), VendingMachineAccessCode.of(accessCode));
     }
 
     @Override
+    public boolean closeVendingMachine(String vendingMachineID) {
+        VendingMachine vendingMachine = this.vendingMachineRepository.findByVendingMachineID(VendingMachineID.of(vendingMachineID));
+        log.info("CURRENT MACHINE {}", vendingMachine);
+        Preconditions.checkNotArgument(vendingMachine.getStatus().equals(VendingMachineStatus.OPEN), () -> new OpenMachineException(vendingMachine.getVendingMachineID()));
+
+        VendingMachine updatedVendingMachine = this.vendingMachineRepository.changeStatus(VendingMachineID.of(vendingMachineID), VendingMachineStatus.OK);
+        log.info("UPDATED MACHINE {}", updatedVendingMachine);
+
+        return updatedVendingMachine.getStatus().equals(VendingMachineStatus.OK);
+    }
+
+    @Override
     public boolean unlockVendingMachine(String vendingMachineID) {
-        return this.vendingMachineRepository.unlockVendingMachine(VendingMachineID.of(vendingMachineID));
+        VendingMachine vendingMachine = this.vendingMachineRepository.findByVendingMachineID(VendingMachineID.of(vendingMachineID));
+        log.info("CURRENT MACHINE {}", vendingMachine);
+        Preconditions.checkNotArgument(vendingMachine.getStatus().equals(VendingMachineStatus.BLOCKED), () -> new BlockedMachineException(vendingMachine.getVendingMachineID()));
+
+        VendingMachine updatedVendingMachine = this.vendingMachineRepository.changeStatus(VendingMachineID.of(vendingMachineID), VendingMachineStatus.OK);
+        log.info("UPDATED MACHINE {}", updatedVendingMachine);
+
+        return updatedVendingMachine.getStatus().equals(VendingMachineStatus.OK);
+    }
+
+    @Override
+    public boolean vendingMachinePing(String vendingMachineID) {
+        log.info("PING FROM MACHINE {}", vendingMachineID);
+        return this.vendingMachineRepository.vendingMachinePing(VendingMachineID.of(vendingMachineID));
     }
 }

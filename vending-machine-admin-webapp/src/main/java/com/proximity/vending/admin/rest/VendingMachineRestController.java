@@ -67,8 +67,18 @@ public class VendingMachineRestController {
         return this.vendingMachineService.openVendingMachine(code, accessCode);
     }
 
+    @PostMapping("/{code}/close")
+    public boolean closeMachine(@PathVariable("code") String code) {
+        return this.vendingMachineService.closeVendingMachine(code);
+    }
+
     @PostMapping("/{code}/unlock")
     public boolean unlockAccessMachine(@PathVariable("code") String code) {
         return this.vendingMachineService.unlockVendingMachine(code);
+    }
+
+    @PostMapping("/{code}/ping")
+    public boolean pingMachine(@PathVariable("code") String code) {
+        return this.vendingMachineService.vendingMachinePing(code);
     }
 }

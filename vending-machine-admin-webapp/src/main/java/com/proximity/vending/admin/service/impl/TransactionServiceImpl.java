@@ -93,7 +93,7 @@ public class TransactionServiceImpl implements TransactionService {
         log.info("CARD TRANSACTION WITH CARD NUMBER {} FOR PRODUCT {} WITH PRICE {}", issuer, productID, productPrice);
 
         boolean cardPayment = this.cardPaymentRepository.pay(TransactionIssuer.of(issuer), productPrice);
-        Preconditions.checkArgument(!cardPayment, () -> new CardPaymentException(issuer));
+        Preconditions.checkNotArgument(cardPayment, () -> new CardPaymentException(issuer));
 
         log.error("CARD TRANSACTION FOR {} ACCEPTED", issuer);
 

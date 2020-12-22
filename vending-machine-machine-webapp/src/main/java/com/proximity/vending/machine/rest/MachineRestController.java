@@ -8,6 +8,7 @@ import com.proximity.vending.machine.service.MachineService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
@@ -25,5 +26,15 @@ public class MachineRestController {
     @PostMapping("/card")
     public Mono<ReceiptDTO> cardTransaction(@RequestBody CardDTO cardDTO) {
         return this.machineService.cardTransaction(cardDTO);
+    }
+
+    @PostMapping("/open")
+    public Mono<Boolean> openMachine(@RequestParam("accessCode") String accessCode) {
+        return this.machineService.openMachine(accessCode);
+    }
+
+    @PostMapping("/close")
+    public Mono<Boolean> closeMachine() {
+        return this.machineService.closeMachine();
     }
 }

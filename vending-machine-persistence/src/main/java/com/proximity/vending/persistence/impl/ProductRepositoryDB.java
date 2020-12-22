@@ -1,5 +1,6 @@
 package com.proximity.vending.persistence.impl;
 
+import com.proximity.vending.domain.exception.NotFoundEntityException;
 import com.proximity.vending.domain.model.Product;
 import com.proximity.vending.domain.repository.ProductRepository;
 import com.proximity.vending.domain.vo.ProductID;
@@ -9,7 +10,6 @@ import com.proximity.vending.persistence.repository.ProductJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import java.util.EmptyStackException;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -41,7 +41,7 @@ public class ProductRepositoryDB implements ProductRepository {
     @Override
     public Product findByProductID(ProductID productID) {
         ProductEntity productEntity = this.productJpaRepository.findByCode(productID.getValue())
-                .orElseThrow(EmptyStackException::new);
+                .orElseThrow(() -> new NotFoundEntityException(Product.class));
 
         return this.productDBMapper.map(productEntity);
     }
@@ -58,7 +58,7 @@ public class ProductRepositoryDB implements ProductRepository {
     @Override
     public Product updateProduct(Product product) {
         ProductEntity currentProductEntity = this.productJpaRepository.findByCode(product.getProductID().getValue())
-                .orElseThrow(EmptyStackException::new);
+                .orElseThrow(() -> new NotFoundEntityException(Product.class));
 
         ProductEntity productEntity = this.productDBMapper.map(product);
         productEntity.setId(currentProductEntity.getId());

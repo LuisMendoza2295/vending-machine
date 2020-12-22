@@ -1,5 +1,7 @@
 package com.proximity.vending.persistence.mapper;
 
+import com.proximity.vending.domain.exception.NotFoundEntityException;
+import com.proximity.vending.domain.model.Product;
 import com.proximity.vending.domain.model.VendingMachine;
 import com.proximity.vending.domain.type.Denomination;
 import com.proximity.vending.domain.vo.ProductID;
@@ -9,7 +11,6 @@ import com.proximity.vending.persistence.entities.VendingMachineProductEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.util.EmptyStackException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -27,6 +28,7 @@ public class VendingMachineDBMapper {
                 .status(vendingMachineEntity.getStatus())
                 .type(vendingMachineEntity.getType())
                 .lastMoneyPickUp(vendingMachineEntity.getLastMoneyPickUp())
+                .lastPing(vendingMachineEntity.getLastPing())
                 .build();
 
         vendingMachineEntity.getVendingMachineProductEntities()
@@ -61,6 +63,7 @@ public class VendingMachineDBMapper {
                 .status(vendingMachine.getStatus().getCode())
                 .type(vendingMachine.getType().getCode())
                 .lastMoneyPickUp(vendingMachine.getLastMoneyPickUp())
+                .lastPing(vendingMachine.getLastPing())
                 .vendingMachineProductEntities(new HashSet<>())
                 .vaultEntities(new HashSet<>())
                 .build();
@@ -85,7 +88,7 @@ public class VendingMachineDBMapper {
                 .stream()
                 .filter(productEntityFilter -> ProductID.of(productEntityFilter.getCode()).equals(productID))
                 .findFirst()
-                .orElseThrow(EmptyStackException::new);
+                .orElseThrow(() -> new NotFoundEntityException(Product.class));
 
         return VendingMachineProductEntity.builder()
                 .productEntity(productEntity)

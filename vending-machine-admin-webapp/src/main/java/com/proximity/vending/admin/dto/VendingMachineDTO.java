@@ -20,6 +20,7 @@ public class VendingMachineDTO {
     private String status;
     private String type;
     private LocalDateTime lastMoneyPickUp;
+    private boolean connected;
     private Map<String, Integer> products = new HashMap<>();
     private Map<String, BigDecimal> prices = new HashMap<>();
     private Map<String, Integer> vault = new HashMap<>();

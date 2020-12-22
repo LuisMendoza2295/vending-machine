@@ -3,19 +3,15 @@ package com.proximity.vending.domain.exception;
 import com.proximity.vending.domain.exception.commons.BaseException;
 import com.proximity.vending.domain.exception.commons.ExceptionCode;
 import com.proximity.vending.domain.vo.VendingMachineID;
-import lombok.*;
-
-import java.math.BigDecimal;
+import lombok.Getter;
 
 @Getter
-public class CashChangeException extends BaseException {
+public class OpenMachineException extends BaseException {
 
     private final VendingMachineID vendingMachineID;
-    private final BigDecimal changeAmount;
 
-    public CashChangeException(VendingMachineID vendingMachineID, BigDecimal changeAmount) {
-        super(ExceptionCode.CASH_CHANGE.getCode());
+    public OpenMachineException(VendingMachineID vendingMachineID) {
+        super(ExceptionCode.OPEN_MACHINE.getCode());
         this.vendingMachineID = vendingMachineID;
-        this.changeAmount = changeAmount;
     }
 }

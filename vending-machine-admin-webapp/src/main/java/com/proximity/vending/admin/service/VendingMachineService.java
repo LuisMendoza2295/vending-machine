@@ -21,5 +21,9 @@ public interface VendingMachineService {
 
     boolean openVendingMachine(String vendingMachineID, String accessCode);
 
+    boolean closeVendingMachine(String vendingMachineID);
+
     boolean unlockVendingMachine(String vendingMachineID);
+
+    boolean vendingMachinePing(String vendingMachineID);
 }

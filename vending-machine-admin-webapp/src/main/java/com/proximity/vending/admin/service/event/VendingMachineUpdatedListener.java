@@ -1,5 +1,6 @@
 package com.proximity.vending.admin.service.event;
 
+import com.proximity.vending.admin.config.VendingMachineProperties;
 import com.proximity.vending.domain.model.VendingMachine;
 import com.proximity.vending.domain.repository.AlertRepository;
 import com.proximity.vending.domain.type.VendingMachineStatus;
@@ -16,6 +17,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 public class VendingMachineUpdatedListener {
 
     private final AlertRepository alertRepository;
+    private final VendingMachineProperties vendingMachineProperties;
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
@@ -29,7 +31,7 @@ public class VendingMachineUpdatedListener {
             return;
         }
 
-        if (vendingMachine.isOverMoneyPickupThreshold()) {
+        if (vendingMachine.isOverMoneyPickupThreshold(this.vendingMachineProperties.getPickupThreshold())) {
             log.info("VENDING MACHINE OVER PICKUP THRESHOLD");
             this.alertRepository.sendMoneyPickUpAlert(vendingMachine.getVendingMachineID());
             log.info("VENDING MACHINE ALERT SENT");

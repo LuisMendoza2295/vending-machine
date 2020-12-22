@@ -2,6 +2,7 @@ package com.proximity.vending.admin;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication(scanBasePackages = {
@@ -11,6 +12,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
         "com.proximity.vending.admin"
 })
 @EnableScheduling
+@EnableAsync
 public class AdminApp {
 
     public static void main(String... args) {

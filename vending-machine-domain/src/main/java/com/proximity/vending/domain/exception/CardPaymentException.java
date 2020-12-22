@@ -1,11 +1,16 @@
 package com.proximity.vending.domain.exception;
 
-import lombok.AllArgsConstructor;
+import com.proximity.vending.domain.exception.commons.BaseException;
+import com.proximity.vending.domain.exception.commons.ExceptionCode;
 import lombok.Getter;
 
 @Getter
-@AllArgsConstructor
-public class CardPaymentException extends RuntimeException {
+public class CardPaymentException extends BaseException {
 
     private final String issuer;
+
+    public CardPaymentException(String issuer) {
+        super(ExceptionCode.CARD_PAYMENT.getCode());
+        this.issuer = issuer;
+    }
 }

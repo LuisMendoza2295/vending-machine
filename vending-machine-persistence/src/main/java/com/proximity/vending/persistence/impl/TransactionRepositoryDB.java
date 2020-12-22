@@ -1,5 +1,7 @@
 package com.proximity.vending.persistence.impl;
 
+import com.proximity.vending.domain.exception.NotFoundEntityException;
+import com.proximity.vending.domain.model.Product;
 import com.proximity.vending.domain.model.Transaction;
 import com.proximity.vending.domain.repository.TransactionRepository;
 import com.proximity.vending.domain.vo.VendingMachineID;
@@ -16,7 +18,6 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.EmptyStackException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -47,10 +48,10 @@ public class TransactionRepositoryDB implements TransactionRepository {
     @Override
     public Transaction createTransaction(Transaction transaction) {
         ProductEntity productEntity = this.productJpaRepository.findByCode(transaction.getProductID().getValue())
-                .orElseThrow(EmptyStackException::new);
+                .orElseThrow(() -> new NotFoundEntityException(Product.class));
 
         VendingMachineEntity vendingMachineEntity = this.vendingMachineJpaRepository.findByCode(transaction.getVendingMachineID().getValue())
-                .orElseThrow(EmptyStackException::new);
+                .orElseThrow(() -> new NotFoundEntityException(Product.class));
 
         TransactionEntity transactionEntity = this.transactionDBMapper.map(transaction, productEntity, vendingMachineEntity);
 

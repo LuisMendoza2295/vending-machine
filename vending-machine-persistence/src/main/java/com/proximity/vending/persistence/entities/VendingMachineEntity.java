@@ -39,6 +39,9 @@ public class VendingMachineEntity {
     @Column(name = "last_money_pickup")
     private LocalDateTime lastMoneyPickUp;
 
+    @Column(name = "last_ping")
+    private LocalDateTime lastPing;
+
     @OneToMany(mappedBy = "vendingMachineEntity", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true)
     private Set<VendingMachineProductEntity> vendingMachineProductEntities = new HashSet<>();
 

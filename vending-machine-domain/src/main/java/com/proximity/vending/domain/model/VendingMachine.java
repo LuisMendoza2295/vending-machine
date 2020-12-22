@@ -13,6 +13,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -22,14 +23,12 @@ import java.util.stream.Collectors;
 @ToString
 public class VendingMachine {
 
-    public static final BigDecimal MONEY_PICKUP_THRESHOLD = BigDecimal.valueOf(100);
-    public static final String DEFAULT_ACCESS_CODE = "0000";
-
     private final VendingMachineID vendingMachineID;
     private final VendingMachineAccessCode accessCode;
     private final VendingMachineStatus status;
     private final VendingMachineType type;
     private final LocalDateTime lastMoneyPickUp;
+    private final LocalDateTime lastPing;
     private final Map<ProductID, Integer> products;
     private final Map<ProductID, MoneyAmount> prices;
     private final Map<Denomination, Integer> denominationCount;
@@ -46,14 +45,10 @@ public class VendingMachine {
         private String status;
         private String type;
         private LocalDateTime lastMoneyPickUp;
+        private LocalDateTime lastPing;
 
         public VendingMachineBuilder code(String code) {
             this.code = code;
-            return this;
-        }
-
-        public VendingMachineBuilder withDefaultAccessCode() {
-            this.accessCode = DEFAULT_ACCESS_CODE;
             return this;
         }
 
@@ -77,9 +72,13 @@ public class VendingMachine {
             return this;
         }
 
+        public VendingMachineBuilder lastPing(LocalDateTime lastPing) {
+            this.lastPing = lastPing;
+            return this;
+        }
+
         public VendingMachine build() {
             Preconditions.checkNotNull(this.code, () -> new InvalidDataException(this.code));
-            Preconditions.checkNotNull(this.accessCode, () -> new InvalidDataException(this.accessCode));
             Preconditions.checkNotNull(this.status, () -> new InvalidDataException(this.status));
             Preconditions.checkNotNull(this.type, () -> new InvalidDataException(this.type));
 
@@ -97,6 +96,7 @@ public class VendingMachine {
                     status,
                     type,
                     this.lastMoneyPickUp,
+                    this.lastPing,
                     new HashMap<>(),
                     new HashMap<>(),
                     denominationCount
@@ -105,10 +105,7 @@ public class VendingMachine {
     }
 
     public VendingMachine dispenseProduct(ProductID productID) {
-        Preconditions.checkArgument(!this.hasStock(productID), () -> OutOfStockException.builder()
-                .productID(productID)
-                .vendingMachineID(this.vendingMachineID)
-                .build());
+        Preconditions.checkNotArgument(this.hasStock(productID), () -> new OutOfStockException(this.vendingMachineID, productID));
 
         int actualValue = this.products.get(productID);
         this.products.put(productID, actualValue - 1);
@@ -179,8 +176,12 @@ public class VendingMachine {
                 .type(this.type.getCode());
     }
 
-    public boolean isOverMoneyPickupThreshold() {
-        return this.getTotalVault().compareTo(MONEY_PICKUP_THRESHOLD) > 0;
+    public boolean isOverMoneyPickupThreshold(BigDecimal moneyPickupThreshold) {
+        return this.getTotalVault().compareTo(moneyPickupThreshold) > 0;
+    }
+
+    public boolean isConnected(long pingThresholdMillis) {
+        return Duration.between(this.lastPing, LocalDateTime.now()).toMillis() <= pingThresholdMillis;
     }
 
     public BigDecimal getTotalVault() {
@@ -261,9 +262,7 @@ public class VendingMachine {
             if (change != null) {
                 return change;
             } else {
-                throw CashChangeException.builder()
-                        .vendingMachineID(vendingMachineID)
-                        .build();
+                throw new CashChangeException(this.vendingMachineID, amount);
             }
         }
     }

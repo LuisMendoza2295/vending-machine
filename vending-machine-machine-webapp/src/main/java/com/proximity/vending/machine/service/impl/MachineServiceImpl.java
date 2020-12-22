@@ -1,12 +1,14 @@
 package com.proximity.vending.machine.service.impl;
 
 import com.proximity.vending.domain.exception.*;
+import com.proximity.vending.domain.exception.commons.BaseException;
 import com.proximity.vending.domain.model.Transaction;
 import com.proximity.vending.domain.model.VendingMachine;
 import com.proximity.vending.domain.type.Denomination;
 import com.proximity.vending.domain.type.TransactionType;
 import com.proximity.vending.domain.type.VendingMachineStatus;
 import com.proximity.vending.domain.vo.ProductID;
+import com.proximity.vending.domain.vo.VendingMachineID;
 import com.proximity.vending.machine.config.VendingMachineProperties;
 import com.proximity.vending.machine.dto.CardDTO;
 import com.proximity.vending.machine.dto.CashDTO;
@@ -22,24 +24,29 @@ import com.proximity.vending.machine.service.mapper.ReceiptDTOMapper;
 import com.proximity.vending.machine.service.mapper.TransactionMachineMapper;
 import com.proximity.vending.machine.service.mapper.VendingMachineMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.BodyExtractors;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
-import java.util.EmptyStackException;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MachineServiceImpl implements MachineService {
 
     private static final String GET_VENDING_MACHINE_PATH = "/vending-machine/{code}";
     private static final String OPEN_MACHINE_PATH = "/vending-machine/{code}/open";
+    private static final String CLOSE_MACHINE_PATH = "/vending-machine/{code}/close";
     private static final String CARD_TRANSACTION_PATH = "/transactions/card";
     private static final String CASH_TRANSACTION_PATH = "/transactions/cash";
+
+    private static final String ACCESS_CODE_PARAM = "accessCode";
 
     private final WebClient adminWebClient;
     private final VendingMachineProperties machineProperties;
@@ -51,15 +58,9 @@ public class MachineServiceImpl implements MachineService {
 
     @Override
     public Mono<ReceiptDTO> cardTransaction(CardDTO cardDTO) {
-        Mono<VendingMachine> vendingMachineMono = this.adminWebClient
-                .get()
-                .uri(GET_VENDING_MACHINE_PATH, this.machineProperties.getId())
-                .retrieve()
-                .bodyToMono(VendingMachineDTO.class)
-                .map(this.vendingMachineMapper::map)
-                .switchIfEmpty(Mono.error(new EmptyStackException()));
+        Mono<VendingMachine> vendingMachineMono = this.getFindVendingMachineMono();
 
-        CardPaymentDTO cashPaymentDTO = CardPaymentDTO.builder()
+        CardPaymentDTO cardPaymentDTO = CardPaymentDTO.builder()
                 .productID(cardDTO.getProduct())
                 .vendingMachineID(this.machineProperties.getId())
                 .issuer(cardDTO.getIssuer())
@@ -68,36 +69,31 @@ public class MachineServiceImpl implements MachineService {
         Mono<Transaction> transactionMono = this.adminWebClient
                 .post()
                 .uri(CARD_TRANSACTION_PATH)
-                .body(BodyInserters.fromValue(cashPaymentDTO))
+                .body(BodyInserters.fromValue(cardPaymentDTO))
                 .retrieve()
+                .onStatus(
+                        httpStatus -> !httpStatus.is2xxSuccessful(),
+                        clientResponse -> clientResponse.body(BodyExtractors.toMono(BaseException.class)).flatMap(Mono::error)
+                )
                 .bodyToMono(TransactionDTO.class)
                 .map(this.transactionMachineMapper::map)
-                .switchIfEmpty(Mono.error(new EmptyStackException()));
+                .switchIfEmpty(Mono.error(new NotFoundEntityException(Transaction.class)));
 
         return vendingMachineMono.
                 doOnSuccess(vendingMachine -> {
-                    if (!vendingMachine.supportsTransactionType(TransactionType.CARD)) {
-                        throw new UnsupportedOperationException("Machine does not support Transaction Type");
-                    }
-                    if (!vendingMachine.hasStock(ProductID.of(cardDTO.getProduct()))) {
-                        throw new UnsupportedOperationException("Machine does not have stock for Product");
-                    }
+                    Preconditions.checkArgument(vendingMachine.getStatus().equals(VendingMachineStatus.BLOCKED), () -> new BlockedMachineException(vendingMachine.getVendingMachineID()));
+                    Preconditions.checkArgument(vendingMachine.getStatus().equals(VendingMachineStatus.OPEN), () -> new OpenMachineException(vendingMachine.getVendingMachineID()));
+                    Preconditions.checkNotArgument(vendingMachine.supportsTransactionType(TransactionType.CARD), () -> new InvalidDataException(TransactionType.CARD));
                 })
-                .doOnError(Throwable::printStackTrace)
+                .doOnError(e -> log.error("COULD NOT PROCESS VENDING MACHINE PRECONDITIONS"))
                 .flatMap(vendingMachine -> transactionMono)
-                .doOnError(Throwable::printStackTrace)
+                .doOnError(e -> log.error("COULD NOT PROCESS CARD TRANSACTION"))
                 .flatMap(transaction -> Mono.just(this.receiptDTOMapper.map(transaction)));
     }
 
     @Override
     public Mono<ChangeDTO> cashTransaction(CashDTO cashDTO) {
-        Mono<VendingMachine> vendingMachineMono = this.adminWebClient
-                .get()
-                .uri(GET_VENDING_MACHINE_PATH, this.machineProperties.getId())
-                .retrieve()
-                .bodyToMono(VendingMachineDTO.class)
-                .map(this.vendingMachineMapper::map)
-                .switchIfEmpty(Mono.error(new EmptyStackException()));
+        Mono<VendingMachine> vendingMachineMono = this.getFindVendingMachineMono();
 
         CashPaymentDTO cashPaymentDTO = CashPaymentDTO.builder()
                 .productID(cashDTO.getProduct())
@@ -110,50 +106,81 @@ public class MachineServiceImpl implements MachineService {
                 .uri(CASH_TRANSACTION_PATH)
                 .body(BodyInserters.fromValue(cashPaymentDTO))
                 .retrieve()
+                .onStatus(
+                        httpStatus -> !httpStatus.is2xxSuccessful(),
+                        clientResponse -> clientResponse.body(BodyExtractors.toMono(BaseException.class)).flatMap(Mono::error)
+                )
                 .bodyToMono(TransactionDTO.class)
                 .map(this.transactionMachineMapper::map)
-                .switchIfEmpty(Mono.error(new EmptyStackException()));
+                .switchIfEmpty(Mono.error(new NotFoundEntityException(Transaction.class)));
 
         Map<Denomination, Integer> change = new HashMap<>();
 
         return vendingMachineMono.
                 doOnSuccess(vendingMachine -> {
-                    Preconditions.checkArgument(vendingMachine.getStatus().equals(VendingMachineStatus.BLOCKED), () -> new BlockedMachineException(vendingMachine.getVendingMachineID()));
-                    Preconditions.checkArgument(!vendingMachine.supportsTransactionType(TransactionType.CASH), () -> new InvalidDataException(TransactionType.CASH));
-
                     ProductID productID = ProductID.of(cashDTO.getProduct());
-                    Preconditions.checkArgument(!vendingMachine.hasStock(productID), () -> OutOfStockException.builder()
-                            .productID(productID)
-                            .vendingMachineID(vendingMachine.getVendingMachineID())
-                            .build());
-                    /* if (!vendingMachine.supportsTransactionType(TransactionType.CASH)) {
-                        throw new UnsupportedOperationException("Machine does not support Transaction Type");
-                    }
-                    if (!vendingMachine.hasStock(productID)) {
-                        throw new UnsupportedOperationException("Machine does not have stock for Product");
-                    } */
+                    Preconditions.checkArgument(vendingMachine.getStatus().equals(VendingMachineStatus.BLOCKED), () -> new BlockedMachineException(vendingMachine.getVendingMachineID()));
+                    Preconditions.checkArgument(vendingMachine.getStatus().equals(VendingMachineStatus.OPEN), () -> new OpenMachineException(vendingMachine.getVendingMachineID()));
+                    Preconditions.checkNotArgument(vendingMachine.supportsTransactionType(TransactionType.CASH), () -> new InvalidDataException(TransactionType.CASH));
+                    Preconditions.checkNotArgument(vendingMachine.hasStock(productID), () -> new OutOfStockException(vendingMachine.getVendingMachineID(), productID));
 
                     BigDecimal paidAmount = cashDTO.getPaidAmount();
                     BigDecimal productPrice = vendingMachine.getProductPrice(productID);
                     Preconditions.checkArgument(productPrice.compareTo(paidAmount) > 0, () -> new InvalidDataException(paidAmount));
-                    /* if (productPrice.compareTo(paidAmount) > 0) {
-                        throw new UnsupportedOperationException("Not enough cash to pay for Product");
-                    } */
 
                     BigDecimal changeAmount = paidAmount.subtract(productPrice);
-                    Preconditions.checkArgument(!vendingMachine.hasChange(changeAmount), () -> CashChangeException.builder()
-                            .changeAmount(changeAmount)
-                            .vendingMachineID(vendingMachine.getVendingMachineID())
-                            .build());
-                    /* if (!vendingMachine.hasChange(changeAmount)) {
-                        throw new UnsupportedOperationException("Not enough change in Machine");
-                    } */
+                    Preconditions.checkNotArgument(vendingMachine.hasChange(changeAmount), () -> new CashChangeException(vendingMachine.getVendingMachineID(), changeAmount));
 
                     change.putAll(vendingMachine.calculateChange(changeAmount));
                 })
-                .doOnError(Throwable::printStackTrace)
+                .doOnError(e -> log.error("COULD NOT PROCESS VENDING MACHINE PRECONDITIONS"))
                 .flatMap(vendingMachine -> transactionMono)
-                .doOnError(Throwable::printStackTrace)
+                .doOnError(e -> log.error("COULD NOT PROCESS CASH TRANSACTION"))
                 .flatMap(transaction -> Mono.just(this.changeDTOMapper.map(transaction, change)));
+    }
+
+    @Override
+    public Mono<Boolean> openMachine(String code) {
+        return this.adminWebClient
+                .post()
+                .uri(uriBuilder -> uriBuilder
+                        .path(OPEN_MACHINE_PATH)
+                        .queryParam(ACCESS_CODE_PARAM, code)
+                        .build(this.machineProperties.getId()))
+                .retrieve()
+                .onStatus(
+                        httpStatus -> !httpStatus.is2xxSuccessful(),
+                        clientResponse -> clientResponse.body(BodyExtractors.toMono(BaseException.class)).flatMap(Mono::error)
+                )
+                .bodyToMono(Boolean.class)
+                .switchIfEmpty(Mono.error(new InvalidDataException(code)));
+    }
+
+    @Override
+    public Mono<Boolean> closeMachine() {
+        return this.adminWebClient
+                .post()
+                .uri(CLOSE_MACHINE_PATH, this.machineProperties.getId())
+                .retrieve()
+                .onStatus(
+                        httpStatus -> !httpStatus.is2xxSuccessful(),
+                        clientResponse -> clientResponse.body(BodyExtractors.toMono(BaseException.class)).flatMap(Mono::error)
+                )
+                .bodyToMono(Boolean.class)
+                .switchIfEmpty(Mono.error(new InvalidDataException(this.machineProperties.getId())));
+    }
+
+    private Mono<VendingMachine> getFindVendingMachineMono() {
+        return this.adminWebClient
+                .get()
+                .uri(GET_VENDING_MACHINE_PATH, this.machineProperties.getId())
+                .retrieve()
+                .onStatus(
+                        httpStatus -> !httpStatus.is2xxSuccessful(),
+                        clientResponse -> clientResponse.body(BodyExtractors.toMono(BaseException.class)).flatMap(Mono::error)
+                )
+                .bodyToMono(VendingMachineDTO.class)
+                .map(this.vendingMachineMapper::map)
+                .switchIfEmpty(Mono.error(new NotFoundEntityException(VendingMachine.class)));
     }
 }

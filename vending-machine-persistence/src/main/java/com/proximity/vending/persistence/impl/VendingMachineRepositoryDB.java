@@ -18,6 +18,7 @@ import com.proximity.vending.persistence.repository.VendingMachineJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -109,18 +110,30 @@ public class VendingMachineRepositoryDB implements VendingMachineRepository {
         int attempts = vendingMachineEntity.getAccessAttempts();
         if (currentAccessCode.equals(accessCode)) {
             attempts = 0;
+            vendingMachineEntity.setStatus(VendingMachineStatus.OPEN.getCode());
         } else {
             attempts++;
+            VendingMachineStatus vendingMachineStatus = VendingMachineStatus.fromAttempts(attempts);
+            vendingMachineEntity.setStatus(vendingMachineStatus.getCode());
         }
 
-        VendingMachineStatus vendingMachineStatus = VendingMachineStatus.fromAttempts(attempts);
-
         vendingMachineEntity.setAccessAttempts(attempts);
-        vendingMachineEntity.setStatus(vendingMachineStatus.getCode());
 
         this.vendingMachineJpaRepository.save(vendingMachineEntity);
 
         return currentAccessCode.equals(accessCode);
+    }
+
+    @Override
+    public VendingMachine changeStatus(VendingMachineID vendingMachineID, VendingMachineStatus vendingMachineStatus) {
+        VendingMachineEntity vendingMachineEntity = this.vendingMachineJpaRepository.findByCode(vendingMachineID.getValue())
+                .orElseThrow(() -> new NotFoundEntityException(VendingMachine.class));
+
+        vendingMachineEntity.setStatus(vendingMachineStatus.getCode());
+
+        VendingMachineEntity updatedVendingMachineEntity = this.vendingMachineJpaRepository.save(vendingMachineEntity);
+
+        return this.vendingMachineDBMapper.map(updatedVendingMachineEntity);
     }
 
     @Override
@@ -129,7 +142,15 @@ public class VendingMachineRepositoryDB implements VendingMachineRepository {
     }
 
     @Override
-    public boolean unlockVendingMachine(VendingMachineID vendingMachineID) {
-        return this.vendingMachineJpaRepository.unlockVendingMachine(vendingMachineID.getValue(), VendingMachineStatus.OK.getCode()) == 1;
+    public boolean vendingMachinePing(VendingMachineID vendingMachineID) {
+        VendingMachineEntity vendingMachineEntity = this.vendingMachineJpaRepository.findByCode(vendingMachineID.getValue())
+                .orElseThrow(() -> new NotFoundEntityException(VendingMachine.class));
+
+        LocalDateTime now = LocalDateTime.now();
+        vendingMachineEntity.setLastPing(now);
+
+        VendingMachineEntity updateVendingMachineEntity = this.vendingMachineJpaRepository.save(vendingMachineEntity);
+
+        return updateVendingMachineEntity.getLastPing().equals(now);
     }
 }

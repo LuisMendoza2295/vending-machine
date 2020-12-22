@@ -36,6 +36,7 @@ public class TransactionDBMapper {
                 .uuid(transaction.getTransactionID().getValue())
                 .type(transaction.getType().getCode())
                 .amount(transaction.getAmount().getValue())
+                .issuer(transaction.getIssuer().getValue())
                 .time(transaction.getDateTime())
                 .productEntity(productEntity)
                 .vendingMachineEntity(vendingMachineEntity)

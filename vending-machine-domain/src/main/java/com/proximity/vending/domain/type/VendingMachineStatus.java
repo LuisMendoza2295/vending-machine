@@ -14,7 +14,8 @@ import java.util.Arrays;
 public enum VendingMachineStatus {
     OK("OK"),
     BLOCKED("BLOCKED"),
-    FOR_MONEY_PICKUP("PICKUP");
+    FOR_MONEY_PICKUP("PICKUP"),
+    OPEN("OPEN");
 
     private static final int MAX_ATTEMPTS = 2;
 
