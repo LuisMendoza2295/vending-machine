@@ -33,7 +33,7 @@ CREATE TABLE transaction_details
     count                 INTEGER ,
     currency_denomination VARCHAR (255),
     currency_type         VARCHAR (255),
-    transaction_id        bigint CONSTRAINT fk_transaction_detail_transaction REFERENCES transactions (transaction_id)
+    transaction_id        bigint CONSTRAINT fk_transaction_detail_transaction REFERENCES transactions
 );
 
 CREATE TABLE transactions
