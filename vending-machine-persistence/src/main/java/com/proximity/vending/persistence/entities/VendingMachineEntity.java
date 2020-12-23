@@ -27,7 +27,7 @@ public class VendingMachineEntity {
     @Column(name = "access_code")
     private String accessCode;
 
-    @Column(name = "access_attemps")
+    @Column(name = "access_attempts")
     private int accessAttempts = 0;
 
     @Column(name = "status")

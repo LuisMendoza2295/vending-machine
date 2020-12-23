@@ -118,6 +118,7 @@ public class VendingMachineRepositoryDB implements VendingMachineRepository {
         }
 
         vendingMachineEntity.setAccessAttempts(attempts);
+        vendingMachineEntity.setLastMoneyPickUp(LocalDateTime.now());
 
         this.vendingMachineJpaRepository.save(vendingMachineEntity);
 
