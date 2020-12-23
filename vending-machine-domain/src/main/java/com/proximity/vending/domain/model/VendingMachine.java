@@ -177,7 +177,9 @@ public class VendingMachine {
                 .code(this.vendingMachineID.getValue())
                 .accessCode(this.accessCode.getValue())
                 .status(this.status.getCode())
-                .type(this.type.getCode());
+                .type(this.type.getCode())
+                .lastMoneyPickUp(this.lastMoneyPickUp)
+                .lastPing(this.lastPing);
     }
 
     public boolean isOverMoneyPickupThreshold(BigDecimal moneyPickupThreshold) {
