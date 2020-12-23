@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "code": "P001",
+    "name": "M&M",
+    "price": 2.50
+  },
+  {
+    "id": 2,
+    "code": "P002",
+    "name": "Lays Small",
+    "price": 0.75
+  },
+  {
+    "id": 3,
+    "code": "P003",
+    "name": "Lays Medium",
+    "price": 1.75
+  },
+  {
+    "id": 4,
+    "code": "P004",
+    "name": "Lays Large",
+    "price": 2.25
+  }
+]

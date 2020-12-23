@@ -6,6 +6,7 @@ import com.proximity.vending.domain.vo.MoneyAmount;
 import com.proximity.vending.domain.vo.ProductID;
 import com.proximity.vending.domain.vo.ProductName;
 import lombok.*;
+import org.apache.commons.lang3.StringUtils;
 
 import java.math.BigDecimal;
 
@@ -45,8 +46,8 @@ public class Product {
         }
 
         public Product build() {
-            Preconditions.checkNotNull(this.code, () -> new InvalidDataException(this.code));
-            Preconditions.checkNotNull(this.name, () -> new InvalidDataException(this.name));
+            Preconditions.checkArgument(StringUtils.isBlank(this.code), () -> new InvalidDataException(this.code));
+            Preconditions.checkArgument(StringUtils.isBlank(this.name), () -> new InvalidDataException(this.name));
             Preconditions.checkNotNull(this.price, () -> new InvalidDataException(this.price));
             Preconditions.checkArgument(this.price.compareTo(BigDecimal.ZERO) <= 0, () -> new InvalidDataException(this.price));
 

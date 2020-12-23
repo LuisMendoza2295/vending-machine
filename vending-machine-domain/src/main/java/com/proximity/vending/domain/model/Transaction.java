@@ -6,6 +6,7 @@ import com.proximity.vending.domain.type.Denomination;
 import com.proximity.vending.domain.type.TransactionType;
 import com.proximity.vending.domain.vo.*;
 import lombok.*;
+import org.apache.commons.lang3.StringUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -83,10 +84,10 @@ public class Transaction {
         }
 
         public Transaction build() {
-            Preconditions.checkNotNull(this.uuid, () -> new InvalidDataException(this.uuid));
-            Preconditions.checkNotNull(this.productID, () -> new InvalidDataException(this.productID));
-            Preconditions.checkNotNull(this.vendingMachineID, () -> new InvalidDataException(this.vendingMachineID));
-            Preconditions.checkNotNull(this.type, () -> new InvalidDataException(this.type));
+            Preconditions.checkArgument(StringUtils.isBlank(this.uuid), () -> new InvalidDataException(this.uuid));
+            Preconditions.checkArgument(StringUtils.isBlank(this.productID), () -> new InvalidDataException(this.productID));
+            Preconditions.checkNotNull(StringUtils.isBlank(this.vendingMachineID), () -> new InvalidDataException(this.vendingMachineID));
+            Preconditions.checkNotNull(StringUtils.isBlank(this.type), () -> new InvalidDataException(this.type));
             Preconditions.checkNotNull(this.amount, () -> new InvalidDataException(this.amount));
             Preconditions.checkNotNull(this.dateTime, () -> new InvalidDataException(this.dateTime));
             Preconditions.checkArgument(this.amount.compareTo(BigDecimal.ZERO) < 0, () -> new InvalidDataException(this.amount));

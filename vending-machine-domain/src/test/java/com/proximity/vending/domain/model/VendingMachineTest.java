@@ -44,7 +44,7 @@ public class VendingMachineTest {
     }
 
     @Test
-    public void testSuccessCreateVendingMachine() {
+    public void testSuccessCreate() {
         VendingMachine vendingMachine = vendingMachineBuilder.build();
 
         assertNotNull(vendingMachine);
@@ -57,28 +57,24 @@ public class VendingMachineTest {
     @Test
     public void testCodeNull() {
         vendingMachineBuilder.code(null);
-
         assertThrows(InvalidDataException.class, () -> vendingMachineBuilder.build());
     }
 
     @Test
     public void testCodeEmpty() {
         vendingMachineBuilder.code("");
-
         assertThrows(InvalidDataException.class, vendingMachineBuilder::build);
     }
 
     @Test
     public void testInvalidStatus() {
         vendingMachineBuilder.status("ABC");
-
         assertThrows(NotFoundEntityException.class, vendingMachineBuilder::build);
     }
 
     @Test
     public void testInvalidType() {
         vendingMachineBuilder.type("ABC");
-
         assertThrows(NotFoundEntityException.class, vendingMachineBuilder::build);
     }
 
