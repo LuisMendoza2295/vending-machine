@@ -5,6 +5,8 @@ import com.proximity.vending.domain.exception.commons.ExceptionCodeConstants;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Objects;
+
 @Getter
 public class InvalidDataException extends BaseException {
 
@@ -16,7 +18,11 @@ public class InvalidDataException extends BaseException {
         super(ExceptionCodeConstants.INVALID_DATA_EXCEPTION);
         this.value = value;
         this.message = StringUtils.EMPTY;
-        this.clazz = value.getClass();
+        if (!Objects.isNull(value)) {
+            this.clazz = value.getClass();
+        } else {
+            this.clazz = Object.class;
+        }
     }
 
     public InvalidDataException(Object value, String message, Class<?> clazz) {

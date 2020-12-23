@@ -7,6 +7,7 @@ import com.proximity.vending.domain.vo.ProductID;
 import com.proximity.vending.domain.vo.VendingMachineAccessCode;
 import com.proximity.vending.domain.vo.VendingMachineID;
 import lombok.*;
+import org.apache.commons.lang3.StringUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -75,9 +76,9 @@ public class VendingMachine {
         }
 
         public VendingMachine build() {
-            Preconditions.checkNotNull(this.code, () -> new InvalidDataException(this.code));
-            Preconditions.checkNotNull(this.status, () -> new InvalidDataException(this.status));
-            Preconditions.checkNotNull(this.type, () -> new InvalidDataException(this.type));
+            Preconditions.checkArgument(StringUtils.isBlank(this.code), () -> new InvalidDataException(this.code));
+            Preconditions.checkArgument(StringUtils.isBlank(this.status), () -> new InvalidDataException(this.status));
+            Preconditions.checkArgument(StringUtils.isBlank(this.type), () -> new InvalidDataException(this.type));
 
             VendingMachineID vendingMachineID = VendingMachineID.of(this.code);
             VendingMachineAccessCode accessCode = VendingMachineAccessCode.of(this.accessCode);
@@ -102,6 +103,7 @@ public class VendingMachine {
     }
 
     public VendingMachine dispenseProduct(ProductID productID) {
+        Preconditions.checkNotArgument(this.products.containsKey(productID), () -> new NotFoundEntityException(ProductID.class));
         Preconditions.checkNotArgument(this.hasStock(productID), () -> new OutOfStockException(this.vendingMachineID, productID));
 
         int actualValue = this.products.get(productID);
@@ -110,6 +112,7 @@ public class VendingMachine {
     }
 
     public VendingMachine removeProduct(ProductID productID) {
+        Preconditions.checkNotArgument(this.products.containsKey(productID), () -> new NotFoundEntityException(ProductID.class));
         this.products.remove(productID);
         return this;
     }
@@ -120,6 +123,7 @@ public class VendingMachine {
     }
 
     public VendingMachine putProduct(ProductID productID, int count) {
+        Preconditions.checkArgument(count < 0, () -> new InvalidDataException(Integer.class));
         this.products.put(productID, count);
         return this;
     }
@@ -162,24 +166,12 @@ public class VendingMachine {
     }
 
     public BigDecimal getProductPrice(ProductID productID) {
-        if (this.prices.containsKey(productID)) {
-            return this.prices.get(productID).getValue();
-        }
-        throw new InvalidDataException(productID);
+        Preconditions.checkNotArgument(this.products.containsKey(productID), () -> new NotFoundEntityException(ProductID.class));
+        return this.prices.get(productID).getValue();
     }
 
     public boolean hasChange(BigDecimal changeAmount) {
         return this.getTotalVault().compareTo(changeAmount) >= 0;
-    }
-
-    public VendingMachineBuilder toBuilder() {
-        return builder()
-                .code(this.vendingMachineID.getValue())
-                .accessCode(this.accessCode.getValue())
-                .status(this.status.getCode())
-                .type(this.type.getCode())
-                .lastMoneyPickUp(this.lastMoneyPickUp)
-                .lastPing(this.lastPing);
     }
 
     public boolean isOverMoneyPickupThreshold(BigDecimal moneyPickupThreshold) {
@@ -211,6 +203,16 @@ public class VendingMachine {
                 .calculateChange(amount)
                 .stream()
                 .collect(Collectors.toMap(CurrencyCount::getDenomination, CurrencyCount::getCount));
+    }
+
+    public VendingMachineBuilder toBuilder() {
+        return builder()
+                .code(this.vendingMachineID.getValue())
+                .accessCode(this.accessCode.getValue())
+                .status(this.status.getCode())
+                .type(this.type.getCode())
+                .lastMoneyPickUp(this.lastMoneyPickUp)
+                .lastPing(this.lastPing);
     }
 
     @Getter
