@@ -16,7 +16,7 @@ public class VendingMachineAccessUpdater {
 
     private final VendingMachineRepository vendingMachineRepository;
 
-    @Scheduled(cron = "0 * * * * *")
+    @Scheduled(cron = "0 0 * * * *")
     @Transactional
     public void unlockVendingMachines() {
         log.info("UNLOCK MACHINES AT {}", LocalDateTime.now());
