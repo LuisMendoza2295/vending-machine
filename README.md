@@ -29,17 +29,19 @@ Check the created containers and sure you have the following containers in your 
     luismendoza2295/vending-admin     "java -jar /admin-ap…"   2 minutes ago   Up 2 minutes    0.0.0.0:8080->8080/tcp    vending-admin-container
     postgres:latest                   "docker-entrypoint.s…"   2 minutes ago   Up 2 minutes    0.0.0.0:5432->5432/tcp    vending-admin-db
 
-Check your admin container by calling the **test** endpoint
+Check your admin container
 
-    $ curl http://localhost:8080/admin/test
-    Hello from Admin
+    $ curl http://localhost:{your_admin_port}/admin/actuator/health
+    {
+        "status": "UP"
+    }
 
-Check your machine containers by calling the **test** endpoint
+Check your machine containers
 
-    $ curl http://localhost:8081/machine/test
-    Hello from Machine
-    $ curl http://localhost:8082/machine/test
-    Hello from Machine
+    $ curl http://localhost:{your_machine_port}/machine/actuator/health
+    {
+        "status": "UP"
+    }
 
 ### Custom initialization
 
