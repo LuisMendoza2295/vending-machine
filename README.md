@@ -92,6 +92,8 @@ Check your machine containers by calling the **test** endpoint
     Hello from Machine
 
 ## Usage
+These examples use the default setup (machine and product codes)
+
 ### Machine
 
 - **Cash purchase**
@@ -214,3 +216,257 @@ Check your machine containers by calling the **test** endpoint
             }
     
 #### Machine
+- **Get by Machine Code**
+    - Request
+    
+            curl --location --request GET 'http://{your_admin_container}:{your_admin_port}/admin/vending-machine/M001'
+    - Response
+            
+            {
+                "code": "M001",
+                "status": "OK",
+                "type": "XYZ1",
+                "lastMoneyPickUp": "2020-12-23T04:55:33.595052",
+                "connected": true,
+                "products": {
+                    "P001": 10,
+                    "P002": 15
+                },
+                "prices": {
+                    "P001": 2.50,
+                    "P002": 0.75
+                },
+                "vault": {
+                    "FIFTY_CENT": 0,
+                    "TWO_DOLLAR": 0,
+                    "FIVE_CENT": 0,
+                    "TWENTY_FIVE_CENT": 0,
+                    "TEN_CENT": 0,
+                    "ONE_DOLLAR": 0
+                }
+            }
+    
+- **Create Machine**
+    - Request
+            
+            curl --location --request POST 'http://{your_admin_container}:{your_admin_port}/admin/vending-machine' \
+            --header 'Content-Type: application/json' \
+            --data-raw '{
+                "code": "M003",
+                "type": "XYZ1"
+            }'
+    - Response
+    
+            {
+                "code": "M003",
+                "status": "OK",
+                "type": "XYZ1",
+                "lastMoneyPickUp": "2020-12-23T06:45:09.814",
+                "connected": true,
+                "products": {},
+                "prices": {},
+                "vault": {
+                    "FIFTY_CENT": 0,
+                    "TWO_DOLLAR": 0,
+                    "FIVE_CENT": 0,
+                    "TWENTY_FIVE_CENT": 0,
+                    "ONE_DOLLAR": 0,
+                    "TEN_CENT": 0
+                }
+            }
+    
+- **Change Machine Access Code**
+    - Request
+    
+            curl --location --request PATCH 'http://{your_admin_container}:{your_admin_port}/admin/vending-machine/M003/access-code?accessCode=1122'
+    - Response
+    
+            {
+                "code": "M003",
+                "status": "OK",
+                "type": "XYZ1",
+                "lastMoneyPickUp": "2020-12-23T06:45:09.814",
+                "connected": false,
+                "products": {},
+                "prices": {},
+                "vault": {
+                    "FIFTY_CENT": 0,
+                    "TWO_DOLLAR": 0,
+                    "FIVE_CENT": 0,
+                    "TWENTY_FIVE_CENT": 0,
+                    "ONE_DOLLAR": 0,
+                    "TEN_CENT": 0
+                }
+            }
+    
+- **Put Product to Machine**
+    - Request
+    
+            curl --location --request PATCH 'http://{your_admin_container}:{your_admin_port}/admin/vending-machine/M003/put-products' \
+            --header 'Content-Type: application/json' \
+            --data-raw '{
+                "productCount": {
+                    "P001": 10,
+                    "P002": 15
+                }
+            }'
+    - Response
+    
+            {
+                "code": "M003",
+                "status": "OK",
+                "type": "XYZ1",
+                "lastMoneyPickUp": "2020-12-23T06:45:09.814",
+                "connected": false,
+                "products": {
+                    "P001": 10,
+                    "P002": 15
+                },
+                "prices": {
+                    "P001": 1.25,
+                    "P002": 0.75
+                },
+                "vault": {
+                    "FIFTY_CENT": 0,
+                    "TWO_DOLLAR": 0,
+                    "FIVE_CENT": 0,
+                    "TWENTY_FIVE_CENT": 0,
+                    "ONE_DOLLAR": 0,
+                    "TEN_CENT": 0
+                }
+            }
+    
+- **Remove Product from Machine**
+    - Request
+      
+            curl --location --request PATCH 'http://{your_admin_container}:{your_admin_port}/admin/vending-machine/M003/remove-product?productCode=P001'
+    - Response
+    
+            {
+                "code": "M003",
+                "status": "OK",
+                "type": "XYZ1",
+                "lastMoneyPickUp": "2020-12-23T06:45:09.814",
+                "connected": false,
+                "products": {
+                    "P002": 15
+                },
+                "prices": {
+                    "P002": 0.75
+                },
+                "vault": {
+                    "FIFTY_CENT": 0,
+                    "TWO_DOLLAR": 0,
+                    "FIVE_CENT": 0,
+                    "TWENTY_FIVE_CENT": 0,
+                    "ONE_DOLLAR": 0,
+                    "TEN_CENT": 0
+                }
+            }
+    
+- **Put Money in Machine Vault**
+    - Request
+    
+            curl --location --request PATCH 'http://{your_admin_container}:{your_admin_port}/admin/vending-machine/M003/vault' \
+            --header 'Content-Type: application/json' \
+            --data-raw '{
+                "denominationCount": {
+                    "FIFTY_CENT": 20,
+                    "TWO_DOLLAR": 15,
+                    "FIVE_CENT": 10,
+                    "TWENTY_FIVE_CENT": 0,
+                    "TEN_CENT": 5,
+                    "ONE_DOLLAR": 50
+                }
+            }'
+    - Response
+    
+            {
+                "code": "M003",
+                "status": "OK",
+                "type": "XYZ1",
+                "lastMoneyPickUp": "2020-12-23T06:45:09.814",
+                "connected": false,
+                "products": {
+                    "P002": 15
+                },
+                "prices": {
+                    "P002": 0.75
+                },
+                "vault": {
+                    "FIFTY_CENT": 20,
+                    "TWO_DOLLAR": 15,
+                    "FIVE_CENT": 10,
+                    "TWENTY_FIVE_CENT": 0,
+                    "ONE_DOLLAR": 50,
+                    "TEN_CENT": 5
+                }
+            }
+    
+####
+- **Get all Transactions**
+    - Request
+    
+            curl --location --request GET 'http://{your_admin_container}:{your_admin_port}/admin/transactions?from=2020-12-21&to=2020-12-23&pageNumber=0&pageSize=5'
+    - Response
+    
+            [
+                {
+                    "transactionID": "a04f689c-5618-4d34-a2a3-51412ca28345",
+                    "productID": "P001",
+                    "vendingMachineID": "M002",
+                    "amount": 2.50,
+                    "dateTime": "2020-12-23T06:25:48.896",
+                    "type": "CARD",
+                    "issuer": "12345678",
+                    "insertedDenomination": {}
+                },
+                {
+                    "transactionID": "eb400e12-0089-4df4-a7a2-3b2bf10d5eaa",
+                    "productID": "P001",
+                    "vendingMachineID": "M002",
+                    "amount": 2.50,
+                    "dateTime": "2020-12-23T06:22:14.866",
+                    "type": "CASH",
+                    "issuer": "CASH",
+                    "insertedDenomination": {
+                        "ONE_DOLLAR": 3
+                    }
+                },
+                {
+                    "transactionID": "ea4dd5c2-75bc-40ab-84da-fb63d624ab55",
+                    "productID": "P001",
+                    "vendingMachineID": "M002",
+                    "amount": 2.50,
+                    "dateTime": "2020-12-23T06:21:09.582",
+                    "type": "CASH",
+                    "issuer": "CASH",
+                    "insertedDenomination": {
+                        "FIFTY_CENT": 2,
+                        "TWENTY_FIVE_CENT": 3,
+                        "ONE_DOLLAR": 1
+                    }
+                },
+                {
+                    "transactionID": "6bd2c8b5-380a-4a14-a2d8-b352d108ac9a",
+                    "productID": "P001",
+                    "vendingMachineID": "M002",
+                    "amount": 2.50,
+                    "dateTime": "2020-12-23T06:20:54.863",
+                    "type": "CASH",
+                    "issuer": "CASH",
+                    "insertedDenomination": {
+                        "FIFTY_CENT": 2,
+                        "TWENTY_FIVE_CENT": 3,
+                        "ONE_DOLLAR": 2
+                    }
+                }
+            ]
+    
+- **Get total earnings**
+    - Request
+    
+            curl --location --request GET 'http://{your_admin_container}:{your_admin_port}/admin/transactions/earnings?from=2020-12-22&to=2020-12-23'
+    - Response
+    
+            10.00
