@@ -81,15 +81,19 @@ Run the machine container (as many as you need)
     -e VENDING_MACHINE_ADMIN-URL=http://vending-admin-container:{your_admin_port}/admin \
     luismendoza2295/vending-machine
 
-Check your admin container by calling the **test** endpoint
+Check your admin container
 
-    $ curl http://localhost:{your_admin_port}/admin/test
-    Hello from Admin
+    $ curl http://localhost:{your_admin_port}/admin/actuator/health
+    {
+        "status": "UP"
+    }
 
-Check your machine containers by calling the **test** endpoint
+Check your machine containers
 
-    $ curl http://localhost:{your_machine_port}/machine/test
-    Hello from Machine
+    $ curl http://localhost:{your_machine_port}/machine/actuator/health
+    {
+        "status": "UP"
+    }
 
 ## Usage
 These examples use the default setup (machine and product codes)
