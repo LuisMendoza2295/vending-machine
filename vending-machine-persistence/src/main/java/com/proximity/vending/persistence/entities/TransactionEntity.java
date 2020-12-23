@@ -14,7 +14,7 @@ import java.util.Set;
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
 @Entity
-@Table(name = "transactions")
+@Table(name = "\"transactions\"")
 public class TransactionEntity {
 
     @Id
