@@ -91,3 +91,126 @@ Check your machine containers by calling the **test** endpoint
     $ curl http://localhost:{your_machine_port}/machine/test
     Hello from Machine
 
+## Usage
+### Machine
+
+- **Cash purchase**
+    - Request
+      
+            curl --location --request POST 'http://{your_machine_container}:{your_machine_port}/machine/cash' \
+            --header 'Content-Type: application/json' \
+            --data-raw '{
+                "product": "P001",
+                "cash": {
+                    "ONE_DOLLAR": 1,
+                    "FIFTY_CENT": 2,
+                    "TWENTY_FIVE_CENT": 3
+                }
+            }'
+    - Response
+
+            {
+                "product": "P001",
+                "change": {
+                    "FIFTY_CENT": 1
+                }
+            }
+   
+- **Card purchase**
+    - Request
+      
+            curl --location --request POST 'http://{your_machine_container}:{your_machine_port}/machine/card' \
+            --header 'Content-Type: application/json' \
+            --data-raw '{
+                "product": "P002",
+                "issuer": "12345678"
+            }'
+    - Response
+      
+            {
+                "uuid": "a04f689c-5618-4d34-a2a3-51412ca28345",
+                "issuer": "12345678",
+                "amount": 2.50,
+                "dateTime": "2020-12-23T06:25:48.896",
+                "product": "P001",
+                "vendingMachine": "M002"
+            }
+    
+- **Open machine**
+    - Request
+    
+            curl --location --request POST 'http://{your_machine_container}:{your_machine_port}/machine/open?accessCode=0000'
+    - Response 
+  
+            true
+
+- **Close machine**
+    - Request
+    
+            curl --location --request POST 'http://{your_machine_container}:{your_machine_port}/machine/close'
+    - Response
+    
+            true
+    
+### Admin
+#### Products
+- **Get all products**
+    - Request
+    
+            curl --location --request GET 'http://{your_admin_container}:{your_admin_port}/admin/products'
+    - Response
+      
+            [
+                {
+                    "code": "P002",
+                    "name": "Lays Small",
+                    "price": 0.75
+                },
+                {
+                    "code": "P003",
+                    "name": "Lays Medium",
+                    "price": 1.75
+                },
+                {
+                    "code": "P004",
+                    "name": "Lays Large",
+                    "price": 2.25
+                },
+                {
+                    "code": "P001",
+                    "name": "M&M",
+                    "price": 1.5
+                }
+            ]
+
+- **Create a product**
+    - Request
+    
+            curl --location --request POST 'http://{your_admin_container}:{your_admin_port}/admin/products' \
+            --header 'Content-Type: application/json' \
+            --data-raw '{
+                "code": "P001",
+                "name": "M&M",
+                "price": 1.5
+            }'
+    - Response
+    
+            {
+                "code": "P001",
+                "name": "M&M",
+                "price": 1.5
+            }
+    
+- **Change product price**
+    - Request
+    
+            curl --location --request PATCH 'http://{your_admin_container}:{your_admin_port}/admin/products/P001/price?price=1.25'
+    - Response
+    
+            {
+                "code": "P001",
+                "name": "M&M",
+                "price": 1.25
+            }
+    
+#### Machine
