@@ -24,6 +24,6 @@ INSERT INTO products(code, name, price) VALUES ('P003', 'Lays Medium', 1.75);
 INSERT INTO products(code, name, price) VALUES ('P004', 'Lays Large', 2.25);
 
 INSERT INTO vending_machine(access_attempts, access_code, code, last_money_pickup, last_ping, status, type)
-VALUES (0, '0000', 'M001', current_timestamp(), current_timestamp(), 'OK', 'XYZ1');
+VALUES (0, '0000', 'M001', current_timestamp, current_timestamp, 'OK', 'XYZ1');
 INSERT INTO vending_machine(access_attempts, access_code, code, last_money_pickup, last_ping, status, type)
-VALUES (0, '0000', 'M002', current_timestamp(), current_timestamp(), 'OK', 'XYZ2');
+VALUES (0, '0000', 'M002', current_timestamp, current_timestamp, 'OK', 'XYZ2');
