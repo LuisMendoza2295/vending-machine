@@ -86,8 +86,8 @@ public class Transaction {
         public Transaction build() {
             Preconditions.checkArgument(StringUtils.isBlank(this.uuid), () -> new InvalidDataException(this.uuid));
             Preconditions.checkArgument(StringUtils.isBlank(this.productID), () -> new InvalidDataException(this.productID));
-            Preconditions.checkNotNull(StringUtils.isBlank(this.vendingMachineID), () -> new InvalidDataException(this.vendingMachineID));
-            Preconditions.checkNotNull(StringUtils.isBlank(this.type), () -> new InvalidDataException(this.type));
+            Preconditions.checkArgument(StringUtils.isBlank(this.vendingMachineID), () -> new InvalidDataException(this.vendingMachineID));
+            Preconditions.checkArgument(StringUtils.isBlank(this.type), () -> new InvalidDataException(this.type));
             Preconditions.checkNotNull(this.amount, () -> new InvalidDataException(this.amount));
             Preconditions.checkNotNull(this.dateTime, () -> new InvalidDataException(this.dateTime));
             Preconditions.checkArgument(this.amount.compareTo(BigDecimal.ZERO) < 0, () -> new InvalidDataException(this.amount));
